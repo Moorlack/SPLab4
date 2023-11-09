@@ -1,20 +1,32 @@
 CC = g++
-CFLAGS = -Wall
-LDFLAGS = -L. -lcalculator
+CFLAGS = -Wall -std=c++11 -fPIC
+LDFLAGS = -shared
 
-all: calculator
+SRCDIR = .
+BUILDDIR = build
+BINDIR = $(BUILDDIR)/bin
 
-calculator: main.o calculator.a
-	$(CC) $(CFLAGS) -o calculator main.o $(LDFLAGS)
+SOURCES = $(wildcard $(SRCDIR)/*.cpp)
+OBJECTS = $(patsubst $(SRCDIR)/%.cpp, $(BUILDDIR)/%.o, $(SOURCES))
 
-main.o: main.cpp calculator.h
-	$(CC) $(CFLAGS) -c main.cpp
+TARGET = $(BINDIR)/calculator_app
+LIBRARY = $(BINDIR)/libcalculator.so
 
-calculator.a: calculator.o
-	ar rcs calculator.a calculator.o
+all: $(TARGET) $(LIBRARY)
 
-calculator.o: calculator.cpp calculator.h
-	$(CC) $(CFLAGS) -c calculator.cpp
+$(TARGET): $(OBJECTS)
+	@mkdir -p $(BINDIR)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS)
+
+$(LIBRARY): $(OBJECTS)
+	@mkdir -p $(BINDIR)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(LIBRARY) $(OBJECTS)
+
+$(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+	@mkdir -p $(BUILDDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.PHONY: clean
 
 clean:
-	rm -f *.o calculator calculator.a
+	rm -rf $(BUILDDIR)
